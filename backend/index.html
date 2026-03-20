@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HR Interview Bot</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: auto; }
+        #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; margin-bottom: 10px; }
+        input { width: 75%; padding: 8px; }
+        button { padding: 8px; }
+        .bot { color: blue; }
+        .user { color: green; }
+    </style>
+</head>
+<body>
+
+<h2>HR Interview Chat</h2>
+
+<button onclick="startInterview()">Start Interview</button>
+
+<div id="chat"></div>
+
+<input id="message" placeholder="Type your answer..." />
+<button onclick="sendMessage()">Send</button>
+
+<script>
+let session_id = null;
+
+function addMessage(sender, text) {
+    const chat = document.getElementById("chat");
+    chat.innerHTML += `<p class="${sender}"><b>${sender}:</b> ${text}</p>`;
+    chat.scrollTop = chat.scrollHeight;
+}
+
+async function startInterview() {
+    const res = await fetch('/start', { method: 'POST' });
+    const data = await res.json();
+
+    session_id = data.session_id;
+    document.getElementById("chat").innerHTML = "";
+
+    addMessage("bot", data.question);
+}
+
+async function sendMessage() {
+    const input = document.getElementById("message");
+    const msg = input.value.trim();
+
+    if (!msg || !session_id) return;
+
+    addMessage("user", msg);
+
+    const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id, message: msg })
+    });
+
+    const data = await res.json();
+
+    console.log(data);
+
+    if (data.reply) {
+        addMessage("bot", data.reply);
+    }
+
+    if (data.next_question) {
+        addMessage("bot", data.next_question);
+    }
+
+    if (data.message === "Interview completed!") {
+        addMessage("bot", "Interview completed!");
+        console.log(data.responses);
+        session_id = null;
+    }
+
+    input.value = "";
+}
+
+// Enter key
+document.getElementById("message").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") sendMessage();
+});
+</script>
+
+</body>
+</html>
