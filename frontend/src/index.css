@@ -1,39 +1,79 @@
+@import 'highlight.js/styles/github.css';
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+
+  --bg-color: #f0f4f8; 
+  --text-color: #000000;
+  --sidebar-bg: #e2e8f0;
+  --sidebar-text: #000000;
+  --sidebar-hover: #cbd5e1;
+  --chat-bg: #ffffff;
+  --user-msg-bg: #7c3aed; /* Vibrant Purple */
+  --user-msg-text: #ffffff;
+  --assistant-msg-bg: transparent;
+  --assistant-msg-text: #000000;
+  --border-color: #cbd5e1;
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --primary-color: #7c3aed; /* Vibrant Purple */
+  --primary-hover: #6d28d9; /* Darker Purple */
+  --accent-color: #e2e8f0;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+[data-theme='dark'] {
+  --bg-color: #000000; /* Deep Black */
+  --text-color: #f8fafc;
+  --sidebar-bg: #0a0a0a;
+  --sidebar-text: #f8fafc;
+  --sidebar-hover: #1a1a1a;
+  --chat-bg: #000000;
+  --user-msg-bg: #7c3aed; /* Vibrant Purple */
+  --user-msg-text: #ffffff;
+  --assistant-msg-bg: transparent;
+  --assistant-msg-text: #f8fafc;
+  --border-color: #1f2937;
+  --input-bg: #0f0f0f;
+  --input-border: #1f2937;
+  --primary-color: #7c3aed; /* Vibrant Purple */
+  --primary-hover: #8b5cf6; /* Lighter Purple */
+  --accent-color: #1f2937;
 }
-a:hover {
-  color: #535bf2;
+
+/* Dark mode overrides for highlight.js */
+[data-theme='dark'] .hljs {
+  background: #282c34 !important;
+  color: #abb2bf !important;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   min-width: 320px;
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+a {
+  font-weight: 500;
+  color: var(--primary-color);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
 }
 
 button {
@@ -43,27 +83,12 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  transition: background-color 0.25s, border-color 0.25s;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+button:focus,
+button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
 }

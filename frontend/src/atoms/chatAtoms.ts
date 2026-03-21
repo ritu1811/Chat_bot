@@ -7,6 +7,17 @@ export interface Message {
   timestamp: Date;
 }
 
+export interface ChatSession {
+  id: string;
+  date: string;
+  messages: Message[];
+}
+
+export const chatHistoryState = atom<ChatSession[]>({
+  key: 'chatHistoryState',
+  default: [],
+});
+
 export const messagesState = atom<Message[]>({
   key: 'messagesState',
   default: [],

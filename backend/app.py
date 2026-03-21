@@ -22,7 +22,7 @@ except Exception as e:
     raise RuntimeError(f"Failed to initialize GenAI client: {e}")
 
 # ✅ Working model
-model_name = "gemini-3-flash-preview"  # Use available model
+model_name = "gemini-2.5-flash"  # Use available model
 
 # 🧠 Session storage
 SESSIONS = {}
@@ -31,7 +31,7 @@ SESSIONS = {}
 INTERVIEW_STEPS = [
     {"id": "Introduction", "question": "Hi! I am your virtual HR interviewer. Can you please introduce yourself?"},
     {"id": "Experience", "question": "Can you summarize your most relevant experience?"},
-    {"id": "Strength", "question": "What is one strength and one weakness?"},
+    {"id": "Strength", "question": "What is your one strength and one weakness?"},
     {"id": "Challenge", "question": "Describe a challenge and how you solved it."},
     {"id": "Motivation", "question": "Why do you want this job?"},
     {"id": "Questions", "question": "Do you have any questions for us?"}
@@ -46,11 +46,11 @@ Question: {question}
 Candidate Answer: {answer}
 
 Tasks:
-- Check if answer is relevant
-- If relevant → give score (0–10), 2 strengths, 2 improvements
-- If not → ask to answer properly
+1. Determine if the answer is a genuine attempt at answering the question. A generic greeting ("hello", "bye") or completely irrelevant/off-topic text must be considered a FAIL.
+2. If it is a valid attempt (worthy of a score of 1 or higher), begin your response exactly with the tag [PASS]. Then give a score (1-10), 2 strengths, and 2 improvements.
+3. If it is an irrelevant answer or invalid, begin your response exactly with the tag [FAIL]. Then politely ask the candidate to provide a proper answer to the question.
 
-Keep it short and professional.
+Very important: Your response MUST start exactly with either [PASS] or [FAIL]. Keep it short and professional.
 """
 
 # 🌐 Serve frontend
@@ -59,7 +59,7 @@ def home():
     return send_from_directory('.', 'index.html')
 
 # 🚀 Start
-@app.route("/start", methods=["POST"])
+@app.route("/api/start", methods=["POST"])
 def start():
     session_id = str(uuid4())
 
@@ -75,7 +75,7 @@ def start():
     })
 
 # 💬 Chat
-@app.route("/chat", methods=["POST"])
+@app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json()
 
@@ -95,7 +95,7 @@ def chat():
 
     step = session["step"]
 
-    if step >= len(INTERVIEW_STEPS):
+    if int(step) >= len(INTERVIEW_STEPS):
         session["completed"] = True
         return jsonify({"message": "Interview completed!"})
 
@@ -110,7 +110,7 @@ def chat():
             contents=prompt
         )
 
-        # Extract text from response
+    # Extract text from response
         if hasattr(response, 'text') and response.text:
             ai_reply = response.text
         elif hasattr(response, 'candidates') and response.candidates:
@@ -123,31 +123,39 @@ def chat():
             ai_reply = str(response)
     except Exception as e:
         print("🔥 ERROR:", e)
-        ai_reply = f"{e}"
+        ai_reply = f"[PASS] {e}" # default to pass on error to avoid getting totally stuck
 
-    # Save
-    session["answers"].append({
-        "q": question,
-        "a": message,
-        "feedback": ai_reply
-    })
+    passed = "[PASS]" in ai_reply
+    ai_reply_clean = ai_reply.replace("[PASS]", "").replace("[FAIL]", "").strip()
 
-    session["step"] += 1
-
-    # End
-    if session["step"] == len(INTERVIEW_STEPS):
-        session["completed"] = True
-        return jsonify({
-            "message": "Interview completed!",
-            "responses": session["answers"]
+    if passed:
+        # Save and increment only if passed
+        session["answers"].append({
+            "q": question,
+            "a": message,
+            "feedback": ai_reply_clean
         })
+        session["step"] += 1
 
-    next_q = INTERVIEW_STEPS[session["step"]]["question"]
+        # End if completed
+        if session["step"] == len(INTERVIEW_STEPS):
+            session["completed"] = True
+            return jsonify({
+                "message": "Interview completed! Thank you for your time.",
+                "responses": session["answers"],
+                "reply": ai_reply_clean
+            })
 
-    return jsonify({
-        "reply": ai_reply,
-        "next_question": next_q
-    })
+        next_q = INTERVIEW_STEPS[session["step"]]["question"]
+        return jsonify({
+            "reply": ai_reply_clean,
+            "next_question": next_q
+        })
+    else:
+        # Treat as invalid attempt, don't increment step, don't send next_question
+        return jsonify({
+            "reply": ai_reply_clean,
+        })
 
 if __name__ == "__main__":
     app.run(debug=True)
