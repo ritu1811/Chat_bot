@@ -2,12 +2,16 @@ from flask import Flask, request, jsonify, send_from_directory
 from uuid import uuid4
 import google.genai as genai
 import os
+from dotenv import load_dotenv
 from flask_cors import CORS
 
-app = Flask(__name__)
-CORS(app)
+# Load environment variables from .env file
+load_dotenv()
 
-# 🔐 Gemini API Key (from Render environment variables)
+app = Flask(__name__)
+CORS(app, origins=["http://localhost:5173"])
+
+# 🔐 Gemini API Key (from Render environment variables or .env)
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
     raise RuntimeError("GEMINI_API_KEY environment variable is required")
@@ -154,8 +158,11 @@ def chat():
 
 
 # 🚀 Render-compatible run
+# if __name__ == "__main__":
+#     app.run(
+#         host="0.0.0.0",
+#         port=int(os.environ.get("PORT", 5000))
+#     )
+
 if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000))
-    )
+    app.run(debug=True)

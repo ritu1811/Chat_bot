@@ -26,7 +26,9 @@ const ChatInput: React.FC = () => {
     set(errorState, null);
 
     try {
-      const API_URL = (import.meta as any).env.VITE_API_URL || '/api';
+      //   const API_URL = (import.meta as any).env.VITE_API_URL || '/api';
+      const API_URL = "https://chat-bot-5-55az.onrender.com"
+      console.log("API URL: ", API_URL)
       const response = await axios.post(`${API_URL}/chat`, {
         session_id: sessionId,
         message: input,
@@ -50,7 +52,7 @@ const ChatInput: React.FC = () => {
           id: Date.now().toString() + '-next',
           role: 'assistant' as const,
           content: response.data.next_question,
-          timestamp: new Date(timestamp.getTime() + 1000), 
+          timestamp: new Date(timestamp.getTime() + 1000),
         });
       }
 
@@ -65,6 +67,7 @@ const ChatInput: React.FC = () => {
 
       set(messagesState, prev => [...prev, ...newMessages]);
     } catch (error) {
+      console.log("Error: ", error)
       set(errorState, 'Failed to send message. Please try again.');
     } finally {
       set(isLoadingState, false);
